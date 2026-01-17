@@ -289,16 +289,22 @@ namespace EasyTex
 					// to the OG meshes
 					//foreach (string lod, in lods)					
 					for(int i = 0; i < lods.Length; i++)
-					{						
-						Mesh m = GetPatchedPrefab(tc.carType).transform.Find(lods[i]).GetComponent<MeshFilter>().mesh;
-			
-						m.RecalculateBounds();
+					{
+                        Mesh src = GetPatchedPrefab(tc.carType)
+							.transform.Find(lods[i])
+							.GetComponent<MeshFilter>().sharedMesh;
 
+                        Mesh m = UnityEngine.Object.Instantiate(src);
+                        m.name = $"{src.name}_{tc.carType}";
+
+                        m.RecalculateBounds();
 						m.RecalculateTangents();
                         m.Optimize();
+
 						__result.transform.Find(lods_sim[i]).GetComponent<MeshFilter>().mesh = m;						
 					}
 					_mod.Logger.Log("Successfully patched mesh for " + tc.name);
+
 					// LittleLad: Nice AND easy!
 
 				} catch(Exception e)
