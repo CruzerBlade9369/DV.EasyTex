@@ -1,0 +1,13 @@
+<Project>
+	<PropertyGroup>
+		<ReferencePath>
+			D:\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\;
+			D:\Programs\Steam\steamapps\common\Derail Valley\DerailValley_Data\Managed\UnityModManager\;
+			D:\Programs\Steam\steamapps\common\Derail Valley\Mods\DVLangHelper\;
+			D:\Programs\Steam\steamapps\common\Derail Valley\Mods\CommsRadioAPI\;
+			D:\Programs\Steam\steamapps\common\Derail Valley\Mods\DVCustomCarLoader\;
+			D:\My Files\!PORTFOLIO\DV mods dev\LocoOwnership\build\;
+		</ReferencePath>
+		<AssemblySearchPaths>$(AssemblySearchPaths);$(ReferencePath);</AssemblySearchPaths>
+	</PropertyGroup>
+</Project>

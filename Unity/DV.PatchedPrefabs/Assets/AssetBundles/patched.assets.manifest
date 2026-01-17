@@ -1,12 +1,12 @@
 ManifestFileVersion: 0
-CRC: 109452153
+CRC: 1173437512
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: e3e0c85471c92e30e9961b1958978e76
+    Hash: c1bc1b1d39e2a0b24a08c03ad60f46c8
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 6a51598c0d999ead50e722e23076ecce
+    Hash: fceeb231386f7c8f12a6efa985d7de6f
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -25,6 +25,7 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 205
   Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
 Assets:
 - Assets/PatchedPrefabs/Patched_BoxCar.prefab
 - Assets/PatchedPrefabs/Patched_PassengerCar.prefab
