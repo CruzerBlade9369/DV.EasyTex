@@ -1,9 +1,11 @@
-﻿using HarmonyLib;
+﻿using DV.ThingTypes;
+using DV.ThingTypes.TransitionHelpers;
+using HarmonyLib;
 using System;
 using System.IO;
 using UnityEngine;
 using UnityModManagerNet;
-using DV.ThingTypes;
+using static DV.Game.Tutorial.ItemTracker.ItemTracker;
 
 namespace EasyTex
 {
@@ -27,8 +29,10 @@ namespace EasyTex
 			// Setup the harmony patches
 			Harmony harmony = new Harmony(_mod.Info.Id);
 			harmony.Patch(
-				original: AccessTools.Method(typeof(TrainCar), nameof(TrainCar.GetCarPrefab)),
-				postfix: new HarmonyMethod(typeof(Patches), nameof(Patches.GetCarPrefab_Patch)));
+				//original: AccessTools.Method(typeof(TrainCar), nameof(TrainCar.GetCarPrefab)),
+				//postfix: new HarmonyMethod(typeof(Patches), nameof(Patches.GetCarPrefab_Patch)));
+				original: AccessTools.Method(typeof(CarsSaveManager), nameof(CarsSaveManager.Load)),
+				prefix: new HarmonyMethod(typeof(Patches), nameof(Patches.SwapMeshes)));
 
 			DebugLog("Started");
         }
@@ -42,6 +46,23 @@ namespace EasyTex
 
 		public class Patches
 		{
+			private static TrainCarType[] carTypesToSwap = new TrainCarType[] {
+                TrainCarType.TankBlack,
+				TrainCarType.TankBlue,
+				TrainCarType.TankChrome,
+				TrainCarType.TankOrange,
+				TrainCarType.TankWhite,
+				TrainCarType.TankYellow,
+                TrainCarType.BoxcarBrown,
+				TrainCarType.BoxcarGreen,
+				TrainCarType.BoxcarPink,
+				TrainCarType.BoxcarRed,
+                TrainCarType.PassengerBlue,
+				TrainCarType.PassengerGreen,
+				TrainCarType.PassengerRed,
+				TrainCarType.CabooseRed
+			};
+
 			private static string[] carTankLODMap = new string[] {
 				"car_tanker_lod/car_tanker_LOD0",
 				"car_tanker_lod/car_tanker_LOD1",
@@ -256,62 +277,52 @@ namespace EasyTex
 				}
 			}
 
-			public static void GetCarPrefab_Patch(ref GameObject __result)
+			public static void SwapMeshes()
 			{
 				try
 				{
-					// Return if result is invalid
-					if (__result == null)
-						return;
+                    foreach (TrainCarType tc in carTypesToSwap)
+                    {
+                        GameObject prefab = tc.ToV2().prefab;
 
-					// Get the traincar component
-					TrainCar tc = __result.GetComponent<TrainCar>();
+                        string[] lods = GetLODs(tc);
+                        string[] lods_sim = GetLODs_Sim(tc);
 
-					/*if ((
-							tc.carType == TrainCarType.PassengerBlue ||
-							tc.carType == TrainCarType.PassengerGreen ||
-							tc.carType == TrainCarType.PassengerRed
-						) &&
-						slicedCarsInstalled)
-						return;*/
+                        if (lods == null || lods_sim == null)
+                        {
+                            DebugLog("LODs null return");
+                            return;
+                        }
 
-					// Get the LOD tree for the carType, return on invalid carType
-					string[] lods = GetLODs(tc.carType);
-					string[] lods_sim = GetLODs_Sim(tc.carType);
-					if (lods == null || lods_sim == null)
-					{ 
-						DebugLog("LODs null return");
-						return;
-					}
+                        // Patch it!
+                        // Go through each LOD and copy the UVs from the patched meshes
+                        // to the OG meshes
+                        // foreach (string lod, in lods)					
+                        for (int i = 0; i < lods.Length; i++)
+                        {
+                            Mesh src = GetPatchedPrefab(tc)
+                                .transform.Find(lods[i])
+                                .GetComponent<MeshFilter>().sharedMesh;
 
-					// Patch it!
-					// Go through each LOD and copy the UVs from the patched meshes
-					// to the OG meshes
-					//foreach (string lod, in lods)					
-					for(int i = 0; i < lods.Length; i++)
-					{
-                        Mesh src = GetPatchedPrefab(tc.carType)
-							.transform.Find(lods[i])
-							.GetComponent<MeshFilter>().sharedMesh;
+                            Mesh m = UnityEngine.Object.Instantiate(src);
+                            m.name = $"{src.name}_{tc}";
 
-                        Mesh m = UnityEngine.Object.Instantiate(src);
-                        m.name = $"{src.name}_{tc.carType}";
+                            m.RecalculateBounds();
+                            m.RecalculateTangents();
+                            m.Optimize();
 
-                        m.RecalculateBounds();
-						m.RecalculateTangents();
-                        m.Optimize();
+                            prefab.transform.Find(lods_sim[i]).GetComponent<MeshFilter>().mesh = m;
+                        }
+                        _mod.Logger.Log("Successfully patched mesh for " + tc);
 
-						__result.transform.Find(lods_sim[i]).GetComponent<MeshFilter>().mesh = m;						
-					}
-					_mod.Logger.Log("Successfully patched mesh for " + tc.name);
-
-					// LittleLad: Nice AND easy!
-
-				} catch(Exception e)
+                        // LittleLad: Nice AND easy!
+                    }
+                }
+				catch(Exception e)
 				{
-					_mod.Logger.LogException(e);
-				}
-			}
+                    _mod.Logger.LogException(e);
+                }
+            }
 		}
 	}
 }
